@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Time to Stretch!</title>
+    <style>
+      body {
+        margin: 0;
+        height: 100vh;
+        background: rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(12px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: "Segoe UI", sans-serif;
+        color: white;
+        text-align: center;
+      }
+      .popup {
+        background: rgba(0, 0, 0, 0.65);
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+      }
+      button {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 18px;
+        border: none;
+        border-radius: 10px;
+        background: #ffffff33;
+        color: white;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      button:hover {
+        background: #ffffff55;
+      }
+      .timer {
+        margin-top: 10px;
+        font-size: 16px;
+        opacity: 0.8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="popup">
+      <h1 id="main-message">⏳ Time to Stretch!</h1>
+      <p>Stand up, move around, look away from the screen for a bit.</p>
+      <div class="timer" id="countdown">Closing in: 10s</div>
+      <button onclick="dismiss()">Got it!</button>
+    </div>
+
+    <script>
+      let seconds = 30;
+      const countdownEl = document.getElementById("countdown");
+      const messageEl = document.getElementById("main-message");
+
+      const interval = setInterval(() => {
+        seconds--;
+        countdownEl.textContent = `Closing in: ${seconds}s`;
+
+        if (seconds <= 0) {
+          clearInterval(interval);
+          dismiss(); // Auto-close
+        }
+      }, 1000);
+
+      function dismiss() {
+        window.electronAPI.dismiss(); // Calls main process
+      }
+
+      // ✅ Receive the message from main process
+      window.electronAPI.onSetMessage((message) => {
+        messageEl.textContent = message;
+      });
+    </script>
+  </body>
+</html>

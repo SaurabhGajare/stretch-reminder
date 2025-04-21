@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Settings</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: sans-serif;
+        padding: 30px;
+        background-color: #f9f9f9;
+        color: #333;
+        max-width: 1200px;
+        margin: auto;
+      }
+
+      h2 {
+        margin-bottom: 10px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+
+      th,
+      td {
+        padding: 12px;
+        border: 1px solid #ddd;
+        text-align: left;
+        vertical-align: middle;
+      }
+
+      th {
+        background-color: #f0f0f0;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 8px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+
+      .remove-btn {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+
+      .remove-btn:hover {
+        background: #c0392b;
+      }
+
+      .button-group {
+        margin-top: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      button {
+        padding: 10px 16px;
+        font-size: 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        background-color: #3498db;
+        color: white;
+        transition: background-color 0.2s ease-in-out;
+      }
+
+      button:hover {
+        background-color: #2980b9;
+      }
+
+      label {
+        display: block;
+        margin-top: 30px;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+
+      #interval {
+        width: 80px;
+        padding: 6px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+
+      #idleStatus {
+        margin-top: 10px;
+        font-style: italic;
+        color: gray;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Customize Reminder Messages</h2>
+    <p>You can add up to 10 messages.</p>
+
+    <table id="messageTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Message</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="button-group">
+      <button onclick="addRow()">➕ Add Message</button>
+      <button onclick="saveMessages()">💾 Save</button>
+      <button onclick="testReminder()">🧪 Test Reminder Now</button>
+    </div>
+
+    <label for="interval">Reminder interval (minutes):</label>
+    <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px">
+      <input type="number" id="interval" min="1" max="120" />
+      <button onclick="saveInterval()">💾 Save Interval</button>
+    </div>
+
+    <div id="idleStatus"></div>
+
+    <script>
+      const maxMessages = 10;
+
+      window.onload = async () => {
+        const messages = await window.electronAPI.getMessages();
+        messages.forEach((msg, index) => addRow(msg));
+
+        // show default set interval time
+        window.electronAPI.getInterval().then((value) => {
+          document.getElementById("interval").value = value;
+        });
+
+        // userIdle status
+        function updateIdleStatus() {
+          window.electronAPI.getUserIdleStatus().then((idle) => {
+            document.getElementById("idleStatus").textContent = idle
+              ? "User is idle — reminders paused"
+              : "User is active";
+          });
+        }
+        setInterval(updateIdleStatus, 3000);
+        updateIdleStatus();
+      };
+
+      function addRow(value = "") {
+        const table = document
+          .getElementById("messageTable")
+          .getElementsByTagName("tbody")[0];
+        const rowCount = table.rows.length;
+
+        if (rowCount >= maxMessages) {
+          // alert("You can only add up to 10 messages.");
+          window.electronAPI.showMessageBox({
+            type: "warning",
+            title: "Message Exceed Limit",
+            message: "You can only add up to 10 messages.",
+            buttons: ["OK"],
+          });
+          return;
+        }
+
+        const row = table.insertRow();
+
+        const cellIndex = row.insertCell(0);
+        const cellInput = row.insertCell(1);
+        const cellRemove = row.insertCell(2);
+
+        cellIndex.textContent = rowCount + 1;
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = value;
+        cellInput.appendChild(input);
+
+        const btn = document.createElement("button");
+        btn.textContent = "Remove";
+        btn.className = "remove-btn";
+        btn.onclick = () => {
+          row.remove();
+          renumberRows();
+        };
+        cellRemove.appendChild(btn);
+      }
+
+      function renumberRows() {
+        const rows = document.querySelectorAll("#messageTable tbody tr");
+        rows.forEach((row, index) => {
+          row.cells[0].textContent = index + 1;
+        });
+      }
+
+      function saveMessages() {
+        const inputs = document.querySelectorAll(
+          '#messageTable input[type="text"]'
+        );
+        const messages = Array.from(inputs)
+          .map((input) => input.value.trim())
+          .filter((msg) => msg !== "");
+
+        if (messages.length <= 0) {
+          // window.alert("Please set atleast one message");
+          window.electronAPI.showMessageBox({
+            type: "warning",
+            title: "No Messages",
+            message: "Please set atleast one message",
+            buttons: ["OK"],
+          });
+        } else {
+          window.electronAPI.saveMessages(messages);
+          // window.alert("Messages saved!");
+          window.electronAPI.showMessageBox({
+            type: "info",
+            title: "Messages",
+            message: "Messages saved!",
+            buttons: ["OK"],
+          });
+        }
+      }
+
+      function saveInterval() {
+        const interval = parseInt(document.getElementById("interval").value);
+        if (!isNaN(interval)) {
+          window.electronAPI.setInterval(interval);
+          window.electronAPI.resetReminderTimer(); // 💥 Reset timer with new interval
+          // alert("Interval Time Updated!");
+          window.electronAPI.showMessageBox({
+            type: "info",
+            title: "Interval Time",
+            message: "Interval Time Updated!",
+            buttons: ["OK"],
+          });
+        }
+      }
+
+      function testReminder() {
+        window.electronAPI.testReminder();
+      }
+    </script>
+  </body>
+</html>
