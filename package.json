@@ -7,7 +7,12 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make"
+    "make": "electron-forge make",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "stretch-reminder",
+    "productName": "Stretch Reminder"
   },
   "keywords": [],
   "author": "Saurabh Gajare",
@@ -22,10 +27,10 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.8.0",
     "@electron-forge/plugin-fuses": "^7.8.0",
     "@electron/fuses": "^1.8.0",
-    "electron": "^35.1.5"
+    "electron": "^35.1.5",
+    "electron-builder": "^26.0.12"
   },
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.1",
-    "electron-store": "^10.0.1"
+    "electron-squirrel-startup": "^1.0.1"
   }
 }

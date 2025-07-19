@@ -1,6 +1,6 @@
-const { default: ElectronStore } = require("electron-store");
+const Store = require("./store-config");
 
-const store = new ElectronStore();
+const store = new Store();
 
 // custom messages to display in reminder
 function getMessages() {
