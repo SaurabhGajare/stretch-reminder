@@ -5,7 +5,7 @@ const store = new Store();
 // custom messages to display in reminder
 function getMessages() {
     const messages = store.get('messages')
-    if (messages.length === 0) {
+    if (!messages || messages.length === 0) {
         return [
             'Your chair called. It’s tired of you. 🪑➡️🚶',
             'Bet that bug can wait. Your hamstrings can’t. 🐛➡️🧍',
@@ -25,7 +25,8 @@ function setMessages(messages) {
 
 // dynamic interval time configurations
 function getInterval() {
-    return store.get("interval", 30); // default: 30 mins
+    const interval = store.get("interval")
+    return interval !== undefined ? interval : 30; // default: 30 mins
 }
 
 function setIntervalMinutes(minutes) {
